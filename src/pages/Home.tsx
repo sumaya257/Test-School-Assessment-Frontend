@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-black flex flex-col justify-center items-center px-6">
+    <div className="min-h-screen  flex flex-col justify-center items-center px-6">
       <div className="max-w-4xl text-center text-white">
         <h1 className="text-4xl font-extrabold mb-6 tracking-wide">
           Welcome to <span className="text-purple-500">Test_School</span> Platform
