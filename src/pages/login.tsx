@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useLoginMutation } from '../services/api';
-import { loginStart, loginSuccess, loginFailure } from '../features/auth/authSlice';
 import { useAppDispatch } from '../hooks';
 import { Link } from 'react-router-dom';
+import { useLoginMutation } from '../features/auth/authApi';
+import { setToken } from '../features/auth/authSlice';
 
 export default function Login() {
   const dispatch = useAppDispatch();
@@ -12,16 +12,14 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    dispatch(loginStart());
     try {
-      const res = await login({ email, password }).unwrap();
-      dispatch(loginSuccess({ user: res.user, token: res.accessToken }));
-      alert('Login successful');
+      const response = await login({ email, password }).unwrap();
+      dispatch(setToken(response.accessToken));
+      alert('Login Successful');
     } catch (err: any) {
-      dispatch(loginFailure(err.data?.message || 'Login failed'));
-      alert(err.data?.message || 'Login failed');
+      alert(err?.data?.message || 'Login Failed');
     }
   };
 
