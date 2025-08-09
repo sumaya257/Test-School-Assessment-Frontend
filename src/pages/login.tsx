@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAppDispatch } from '../hooks';
 import { Link } from 'react-router-dom';
 import { useLoginMutation } from '../features/auth/authApi';
-import { setToken } from '../features/auth/authSlice';
+import { setToken, setUser } from '../features/auth/authSlice';
 
 export default function Login() {
   const dispatch = useAppDispatch();
@@ -16,7 +16,11 @@ export default function Login() {
     e.preventDefault();
     try {
       const response = await login({ email, password }).unwrap();
+      console.log(response.user)
       dispatch(setToken(response.accessToken));
+       if (response.user) {
+      dispatch(setUser(response.user));
+    }
       alert('Login Successful');
     } catch (err: any) {
       alert(err?.data?.message || 'Login Failed');

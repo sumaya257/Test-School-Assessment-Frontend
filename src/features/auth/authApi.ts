@@ -1,4 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import type { User } from './authSlice';
+
+export type Role = 'student' | 'admin' | 'supervisor';
 
 interface RegisterPayload {
   email: string;
@@ -12,9 +15,11 @@ interface LoginPayload {
 }
 
 interface AuthResponse {
+  user?: User;
   accessToken: string;
   id?: string;
   email?: string;
+  role?: Role;
 }
 
 export const authApi = createApi({

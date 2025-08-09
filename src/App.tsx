@@ -1,14 +1,18 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Register from './pages/Register';
 import Home from './pages/Home';
 import Layout from './components/Layout';
 import ExamStart from './features/exams/ExamStart';
 import Login from './pages/login';
 import ProtectedRoute from './components/ProtectedRoute';
+import type { RootState } from './app/store';
+import { useSelector } from 'react-redux';
+import StudentDashboard from './dashboard/StudentDashboard';
+import AdminDashboard from './dashboard/AdminDashboard';
+import SupervisorDashboard from './dashboard/SupervisorDashboard';
 
 export default function App() {
-  // আপনি চাইলে এখানে user level state রাখতে পারেন,
-  // অথবা Redux থেকে handle করতে পারেন।
+  const user = useSelector((state: RootState) => state.auth.user);
 
   return (
     <Router>
@@ -16,7 +20,7 @@ export default function App() {
         {/* Layout এর মধ্যে public routes */}
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
-          <Route path="login" element={<Login />} />
+          <Route path="login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
           <Route path="register" element={<Register />} />
         </Route>
 
@@ -25,8 +29,17 @@ export default function App() {
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <h1 className="p-4 text-3xl">Dashboard (Protected)</h1>
+              {user?.role === 'student' ? (
+                <StudentDashboard />
+              ) : user?.role === 'admin' ? (
+                <AdminDashboard />
+              ) : user?.role === 'supervisor' ? (
+                <SupervisorDashboard />
+              ) : (<Login />
+                
+              )}
             </ProtectedRoute>
+
           }
         />
 

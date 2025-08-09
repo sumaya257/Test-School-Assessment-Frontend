@@ -50,16 +50,23 @@ const ExamStart: React.FC<Props> = ({ step, onFinish }) => {
     );
   };
 
-  const handleSubmit = () => {
-    if (!examId) return;
-    submitExam({ examId, answers })
-      .unwrap()
-      .then((res) => {
-        alert(`Result: ${res.result}\nCertified Level: ${res.certifiedLevel}`);
-        onFinish(res.certifiedLevel);
-      })
-      .catch(() => alert('Submit failed'));
-  };
+const handleSubmit = () => {
+  if (!examId) return;
+
+  // null অপশন বাদ দিয়ে শুধু valid উত্তরগুলো নেয়া হচ্ছে
+  const filteredAnswers = answers.filter(
+    (a): a is { questionId: string; optionId: number } => a.optionId !== null
+  );
+
+  submitExam({ examId, answers: filteredAnswers })
+    .unwrap()
+    .then((res) => {
+      alert(`Result: ${res.result}\nCertified Level: ${res.certifiedLevel}`);
+      onFinish(res.certifiedLevel);
+    })
+    .catch(() => alert('Submit failed'));
+};
+
 
   if (isLoading || !data) return <p>Loading questions...</p>;
 
