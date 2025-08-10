@@ -38,7 +38,7 @@ const ProtectedRoute: React.FC<Props> = ({ children }) => {
   }, [accessToken, refreshToken, refreshTokenApi, dispatch]);
 
   if (checking) {
-    return <div>Checking authentication...</div>; // এখানে লোডার দিতে পারো
+    return <div>Checking authentication...</div>;
   }
 
   if (!accessToken && !refreshToken) {

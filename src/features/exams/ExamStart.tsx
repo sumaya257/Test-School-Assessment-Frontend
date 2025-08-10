@@ -23,6 +23,7 @@ const ExamStart: React.FC<Props> = ({ step, onFinish }) => {
   const { examId, timer, answers, step: currentStep, questions } = useSelector(
     (state: RootState) => state.exam
   );
+  // console.log(questions)
 
   const [startExam, { isLoading }] = useStartExamMutation();
   const [submitExam, { isLoading: submitting }] = useSubmitExamMutation();
@@ -148,7 +149,7 @@ const ExamStart: React.FC<Props> = ({ step, onFinish }) => {
           <div key={q.id} className="mb-6 border-b pb-4">
             <p>
               <strong>
-                Q{idx + 1} [{q.level} - {q.competencyCode}]:
+                Q{idx + 1} [{q.level} - {q.competencyName}]:
               </strong>{' '}
               {q.stem}
             </p>
