@@ -1,8 +1,17 @@
-import React, { useEffect } from 'react';
+// src/features/exam/ExamStart.tsx
+import React, { useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../../app/store';
-import { setExam, setTimer, setAnswer, clearExam, setStep } from './examSlice';
+import {
+  setExam,
+  setTimer,
+  setAnswer,
+  clearExam,
+  setStep,
+} from './examSlice';
 import { useStartExamMutation, useSubmitExamMutation } from './examApi';
+
+import { jsPDF } from "jspdf";
 
 interface Props {
   step: number;
@@ -11,37 +20,32 @@ interface Props {
 
 const ExamStart: React.FC<Props> = ({ step, onFinish }) => {
   const dispatch = useDispatch();
-  const { examId, timer, answers, step: currentStep } = useSelector((state: RootState) => state.exam);
+  const { examId, timer, answers, step: currentStep, questions } = useSelector(
+    (state: RootState) => state.exam
+  );
 
-  const [startExam, { data, isLoading }] = useStartExamMutation();
+  const [startExam, { isLoading }] = useStartExamMutation();
   const [submitExam, { isLoading: submitting }] = useSubmitExamMutation();
 
-  // Start or restart exam if step changes or no examId
   useEffect(() => {
-  console.log('ExamStart useEffect fired:', { examId, currentStep, step });
-  if (!examId || currentStep !== step) {
-    startExam({ step })
-      .unwrap()
-      .then((res) => {
-        console.log('Exam started:', res);
-        dispatch(
-          setExam({
-            examId: res.examId,
-            step,
-            timer: res.durationSeconds,
-            answers: res.questions.map((q) => ({ questionId: q.id, optionId: null })),
-          })
-        );
-      })
-      .catch((err) => {
-        console.error('Failed to start exam:', err);
-        alert('Failed to start exam');
-      });
-  }
-}, [step, startExam, dispatch, examId, currentStep]);
+    if (!examId || currentStep !== step || questions.length === 0) {
+      startExam({ step })
+        .unwrap()
+        .then((res) => {
+          dispatch(
+            setExam({
+              examId: res.examId,
+              step,
+              timer: res.durationSeconds,
+              answers: res.questions.map((q) => ({ questionId: q.id, optionId: null })),
+              questions: res.questions,
+            })
+          );
+        })
+        .catch(() => alert('Failed to start exam'));
+    }
+  }, [step, startExam, dispatch, examId, currentStep, questions.length]);
 
-
-  // Timer countdown + auto-submit on expiry
   useEffect(() => {
     if (timer <= 0 && examId) {
       handleSubmit();
@@ -53,11 +57,42 @@ const ExamStart: React.FC<Props> = ({ step, onFinish }) => {
     return () => clearInterval(interval);
   }, [timer, examId, dispatch]);
 
-  const handleOptionSelect = (questionId: string, optionId: number) => {
-    dispatch(setAnswer({ questionId, optionId }));
+  // Certificate PDF তৈরি ও ডাউনলোড ফাংশন
+  const generateCertificatePDF = (certifiedLevel: string) => {
+    const doc = new jsPDF();
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(24);
+    doc.text("Certificate of Achievement", 105, 40, { align: "center" });
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(16);
+    doc.text("This certificate is proudly presented to", 105, 60, { align: "center" });
+
+    // এখানে তোমার ইউজারের নাম বা id দিতে পারো, এখন 'Student' রাখা হয়েছে
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(20);
+    doc.text("Student", 105, 75, { align: "center" });
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(14);
+    doc.text(
+      `For successfully completing the examination`,
+      105,
+      90,
+      { align: "center" }
+    );
+
+    doc.setFontSize(16);
+    doc.text(`Certified Level: ${certifiedLevel}`, 105, 110, { align: "center" });
+
+    doc.setFontSize(12);
+    doc.text(`Date: ${new Date().toLocaleDateString()}`, 105, 130, { align: "center" });
+
+    doc.save("certificate.pdf");
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     if (!examId) return;
 
     const filteredAnswers = answers.filter(
@@ -69,33 +104,33 @@ const ExamStart: React.FC<Props> = ({ step, onFinish }) => {
       .then((res) => {
         alert(`Result: ${res.result}\nCertified Level: ${res.certifiedLevel}`);
 
-        // Handle 3 step progression logic:
-        // Score ranges and level advancement per your spec
         const perc = res.percentage;
         let nextStep = step;
         const certifiedLevel = res.certifiedLevel;
 
         if (step === 1) {
-          if (perc >= 75) {
-            nextStep = 2;
-          } // else stays at step 1 or fail (no retake)
+          if (perc >= 75) nextStep = 2;
         } else if (step === 2) {
-          if (perc >= 75) {
-            nextStep = 3;
-          } // else stays at step 2 or fallback to A2 per your server logic
+          if (perc >= 75) nextStep = 3;
         } else if (step === 3) {
-          // Final step - no next step
           nextStep = 3;
         }
 
         dispatch(setStep(nextStep));
         dispatch(clearExam());
         onFinish(certifiedLevel);
+
+        // সার্টিফিকেট PDF ডাউনলোড শুরু করো
+        generateCertificatePDF(certifiedLevel);
       })
       .catch(() => alert('Submit failed'));
+  }, [answers, examId, step, submitExam, dispatch, onFinish]);
+
+  const handleOptionSelect = (questionId: string, optionId: number) => {
+    dispatch(setAnswer({ questionId, optionId }));
   };
 
-  if (isLoading || !data) return <p>Loading questions...</p>;
+  if (isLoading || questions.length === 0) return <p>Loading questions...</p>;
 
   return (
     <div className="max-w-4xl mx-auto p-4">
@@ -109,7 +144,7 @@ const ExamStart: React.FC<Props> = ({ step, onFinish }) => {
           handleSubmit();
         }}
       >
-        {data.questions.map((q, idx) => (
+        {questions.map((q, idx) => (
           <div key={q.id} className="mb-6 border-b pb-4">
             <p>
               <strong>
@@ -119,12 +154,18 @@ const ExamStart: React.FC<Props> = ({ step, onFinish }) => {
             </p>
             <div className="mt-2 flex flex-col gap-2">
               {q.options.map((opt) => (
-                <label key={opt.id} className="cursor-pointer flex items-center gap-2">
+                <label
+                  key={opt.id}
+                  className="cursor-pointer flex items-center gap-2"
+                >
                   <input
                     type="radio"
                     name={`q-${q.id}`}
                     value={opt.id}
-                    checked={answers.find((a) => a.questionId === q.id)?.optionId === opt.id}
+                    checked={
+                      answers.find((a) => a.questionId === q.id)?.optionId ===
+                      opt.id
+                    }
                     onChange={() => handleOptionSelect(q.id, opt.id)}
                     required
                   />
