@@ -3,6 +3,7 @@ import { useAppDispatch } from '../hooks';
 import { Link } from 'react-router-dom';
 import { useLoginMutation } from '../features/auth/authApi';
 import { setToken, setUser } from '../features/auth/authSlice';
+import { toast } from 'sonner';
 
 export default function Login() {
   const dispatch = useAppDispatch();
@@ -12,18 +13,19 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-   const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const response = await login({ email, password }).unwrap();
-      console.log(response.user)
+
+      // Redux এ সেভ
       dispatch(setToken(response.accessToken));
-       if (response.user) {
-      dispatch(setUser(response.user));
-    }
-      alert('Login Successful');
+      if (response.user) {
+        dispatch(setUser(response.user));
+      }
+      toast.success('Login Successful');
     } catch (err: any) {
-      alert(err?.data?.message || 'Login Failed');
+      toast.error(err?.data?.message || 'Login Failed');
     }
   };
 

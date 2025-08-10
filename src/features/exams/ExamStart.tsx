@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useStartExamMutation, useSubmitExamMutation } from './examApi';
 
+
 interface Answer {
   questionId: string;
   optionId: number | null;
 }
 
 interface Props {
-  step: number; // 1 or 2 or 3
+  step: number;
   onFinish: (certifiedLevel: string) => void;
 }
 
@@ -19,22 +20,25 @@ const ExamStart: React.FC<Props> = ({ step, onFinish }) => {
   const [timer, setTimer] = useState(0);
   const [examId, setExamId] = useState<string | null>(null);
 
+  // Start exam and fetch questions
   useEffect(() => {
     startExam({ step })
       .unwrap()
       .then((res) => {
         setExamId(res.examId);
         setTimer(res.durationSeconds);
-        // initialize answers array
-        const initialAnswers = res.questions.map((q) => ({ questionId: q.id, optionId: null }));
+        const initialAnswers = res.questions.map((q) => ({
+          questionId: q.id,
+          optionId: null,
+        }));
         setAnswers(initialAnswers);
       })
       .catch(() => alert('Failed to start exam'));
   }, [startExam, step]);
 
-  // countdown timer
+  // Timer countdown & auto submit
   useEffect(() => {
-    if (timer <= 0) {
+    if (timer <= 0 && examId) {
       handleSubmit();
       return;
     }
@@ -42,7 +46,7 @@ const ExamStart: React.FC<Props> = ({ step, onFinish }) => {
       setTimer((t) => t - 1);
     }, 1000);
     return () => clearInterval(interval);
-  }, [timer]);
+  }, [timer, examId]);
 
   const handleOptionSelect = (questionId: string, optionId: number) => {
     setAnswers((prev) =>
@@ -67,13 +71,13 @@ const handleSubmit = () => {
     .catch(() => alert('Submit failed'));
 };
 
-
   if (isLoading || !data) return <p>Loading questions...</p>;
 
   return (
     <div className="max-w-4xl mx-auto p-4">
       <h2 className="text-xl font-semibold mb-4">
-        Step {step} Exam - Time left: {Math.floor(timer / 60)}:{(timer % 60).toString().padStart(2, '0')}
+        Step {step} Exam - Time left: {Math.floor(timer / 60)}:
+        {(timer % 60).toString().padStart(2, '0')}
       </h2>
       <form
         onSubmit={(e) => {
@@ -91,10 +95,7 @@ const handleSubmit = () => {
             </p>
             <div className="mt-2 flex flex-col gap-2">
               {q.options.map((opt) => (
-                <label
-                  key={opt.id}
-                  className="cursor-pointer flex items-center gap-2"
-                >
+                <label key={opt.id} className="cursor-pointer flex items-center gap-2">
                   <input
                     type="radio"
                     name={`q-${q.id}`}
