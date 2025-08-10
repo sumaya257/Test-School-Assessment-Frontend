@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 export default function Footer() {
     return (
         <footer className="bg-gray-900 text-gray-300 py-8">
-            <div className="max-w-7xl mx-auto px-4 md:flex md:justify-between md:items-center">
+            <div className="px-6 md:flex md:justify-between md:items-center">
 
                 {/* Brand Section */}
                 <div className="mb-6 md:mb-0 text-center md:text-left">
