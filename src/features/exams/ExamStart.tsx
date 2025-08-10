@@ -149,7 +149,7 @@ const ExamStart: React.FC<Props> = ({ step, onFinish }) => {
           <div key={q.id} className="mb-6 border-b pb-4">
             <p>
               <strong>
-                Q{idx + 1} [{q.level} - {q.competencyName}]:
+                Q{idx + 1} [{q.level} - {q.competencyCode}]:
               </strong>{' '}
               {q.stem}
             </p>

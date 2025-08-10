@@ -8,7 +8,6 @@ interface QuestionOption {
 interface Question {
   id: string;
   competencyCode: string;
-  competencyName: string;
   level: string;
   stem: string;
   options: QuestionOption[];

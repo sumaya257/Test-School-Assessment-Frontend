@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import  { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -38,6 +38,7 @@ export default function EmailVerification() {
           toast.error(data.message || 'Email verification failed.');
           setVerified(false);
         }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (err) {
         toast.error('Something went wrong during verification.');
         setVerified(false);
