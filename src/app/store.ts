@@ -1,5 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from '../features/auth/authSlice';
+import examReducer from '../features/exams/examSlice';
 import { authApi } from '../features/auth/authApi';
 import { examsApi } from '../features/exams/examApi';
 
@@ -24,11 +25,21 @@ const persistConfig = {
   whitelist: ['token', 'user'], // auth slice এর token আর user persist হবে
 };
 
+// exam persist config
+const persistExamConfig = {
+  key: 'exam',
+  version: 1,
+  storage,
+  whitelist: ['examId', 'step', 'timer', 'answers'], 
+};
+
 const persistedAuthReducer = persistReducer(persistConfig, authReducer);
+const persistedExamReducer = persistReducer(persistExamConfig, examReducer);
 
 export const store = configureStore({
   reducer: {
     auth: persistedAuthReducer,
+    exam: persistedExamReducer,  
     [authApi.reducerPath]: authApi.reducer,
     [examsApi.reducerPath]: examsApi.reducer,
   },

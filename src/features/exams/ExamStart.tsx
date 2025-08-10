@@ -1,11 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import type { RootState } from '../../app/store';
+import { setExam, setTimer, setAnswer, clearExam, setStep } from './examSlice';
 import { useStartExamMutation, useSubmitExamMutation } from './examApi';
-
-
-interface Answer {
-  questionId: string;
-  optionId: number | null;
-}
 
 interface Props {
   step: number;
@@ -13,63 +10,90 @@ interface Props {
 }
 
 const ExamStart: React.FC<Props> = ({ step, onFinish }) => {
+  const dispatch = useDispatch();
+  const { examId, timer, answers, step: currentStep } = useSelector((state: RootState) => state.exam);
+
   const [startExam, { data, isLoading }] = useStartExamMutation();
   const [submitExam, { isLoading: submitting }] = useSubmitExamMutation();
 
-  const [answers, setAnswers] = useState<Answer[]>([]);
-  const [timer, setTimer] = useState(0);
-  const [examId, setExamId] = useState<string | null>(null);
-
-  // Start exam and fetch questions
+  // Start or restart exam if step changes or no examId
   useEffect(() => {
+  console.log('ExamStart useEffect fired:', { examId, currentStep, step });
+  if (!examId || currentStep !== step) {
     startExam({ step })
       .unwrap()
       .then((res) => {
-        setExamId(res.examId);
-        setTimer(res.durationSeconds);
-        const initialAnswers = res.questions.map((q) => ({
-          questionId: q.id,
-          optionId: null,
-        }));
-        setAnswers(initialAnswers);
+        console.log('Exam started:', res);
+        dispatch(
+          setExam({
+            examId: res.examId,
+            step,
+            timer: res.durationSeconds,
+            answers: res.questions.map((q) => ({ questionId: q.id, optionId: null })),
+          })
+        );
       })
-      .catch(() => alert('Failed to start exam'));
-  }, [startExam, step]);
+      .catch((err) => {
+        console.error('Failed to start exam:', err);
+        alert('Failed to start exam');
+      });
+  }
+}, [step, startExam, dispatch, examId, currentStep]);
 
-  // Timer countdown & auto submit
+
+  // Timer countdown + auto-submit on expiry
   useEffect(() => {
     if (timer <= 0 && examId) {
       handleSubmit();
       return;
     }
     const interval = setInterval(() => {
-      setTimer((t) => t - 1);
+      dispatch(setTimer(timer - 1));
     }, 1000);
     return () => clearInterval(interval);
-  }, [timer, examId]);
+  }, [timer, examId, dispatch]);
 
   const handleOptionSelect = (questionId: string, optionId: number) => {
-    setAnswers((prev) =>
-      prev.map((a) => (a.questionId === questionId ? { ...a, optionId } : a))
-    );
+    dispatch(setAnswer({ questionId, optionId }));
   };
 
-const handleSubmit = () => {
-  if (!examId) return;
+  const handleSubmit = () => {
+    if (!examId) return;
 
-  // null অপশন বাদ দিয়ে শুধু valid উত্তরগুলো নেয়া হচ্ছে
-  const filteredAnswers = answers.filter(
-    (a): a is { questionId: string; optionId: number } => a.optionId !== null
-  );
+    const filteredAnswers = answers.filter(
+      (a): a is { questionId: string; optionId: number } => a.optionId !== null
+    );
 
-  submitExam({ examId, answers: filteredAnswers })
-    .unwrap()
-    .then((res) => {
-      alert(`Result: ${res.result}\nCertified Level: ${res.certifiedLevel}`);
-      onFinish(res.certifiedLevel);
-    })
-    .catch(() => alert('Submit failed'));
-};
+    submitExam({ examId, answers: filteredAnswers })
+      .unwrap()
+      .then((res) => {
+        alert(`Result: ${res.result}\nCertified Level: ${res.certifiedLevel}`);
+
+        // Handle 3 step progression logic:
+        // Score ranges and level advancement per your spec
+        const perc = res.percentage;
+        let nextStep = step;
+        const certifiedLevel = res.certifiedLevel;
+
+        if (step === 1) {
+          if (perc >= 75) {
+            nextStep = 2;
+          } // else stays at step 1 or fail (no retake)
+        } else if (step === 2) {
+          if (perc >= 75) {
+            nextStep = 3;
+          } // else stays at step 2 or fallback to A2 per your server logic
+        } else if (step === 3) {
+          // Final step - no next step
+          nextStep = 3;
+        }
+
+        dispatch(setStep(nextStep));
+        dispatch(clearExam());
+        onFinish(certifiedLevel);
+      })
+      .catch(() => alert('Submit failed'));
+  };
 
   if (isLoading || !data) return <p>Loading questions...</p>;
 
