@@ -11,6 +11,7 @@ import StudentDashboard from './dashboard/StudentDashboard';
 import AdminDashboard from './dashboard/AdminDashboard';
 import SupervisorDashboard from './dashboard/SupervisorDashboard';
 import EmailVerification from './pages/EmailVerification';
+import ProfilePage from './pages/Profile';
 
 export default function App() {
   const user = useSelector((state: RootState) => state.auth.user);
@@ -44,6 +45,10 @@ export default function App() {
 
           }
         />
+        <Route
+          path="/dashboard/profile"
+          element={
+            <ProfilePage/>}/>
 
         {/* Protected Exam Route with step param */}
         <Route
