@@ -8,12 +8,14 @@ export interface User {
 }
 
 interface AuthState {
-  token: string | null;
+  accessToken: string | null;
+  refreshToken: string | null;
   user: User | null;
 }
 
 const initialState: AuthState = {
-  token: null,
+  accessToken: null,
+  refreshToken: null,
   user: null,
 };
 
@@ -22,17 +24,21 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     setToken(state, action: PayloadAction<string>) {
-      state.token = action.payload;
+      state.accessToken = action.payload;
+    },
+    setRefreshToken(state, action: PayloadAction<string>) {
+      state.refreshToken = action.payload;
     },
     setUser(state, action: PayloadAction<User>) {
       state.user = action.payload;
     },
-    clearToken(state) {
-      state.token = null;
+    clearAuth(state) {
+      state.accessToken = null;
+      state.refreshToken = null;
       state.user = null;
     },
   },
 });
 
-export const { setToken, setUser, clearToken } = authSlice.actions;
+export const { setToken, setRefreshToken, setUser, clearAuth } = authSlice.actions;
 export default authSlice.reducer;

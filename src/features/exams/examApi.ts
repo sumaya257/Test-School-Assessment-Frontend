@@ -38,7 +38,7 @@ export const examsApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
     prepareHeaders: (headers, { getState }) => {
-      const token = (getState() as RootState).auth.token;
+      const token = (getState() as RootState).auth.accessToken;
       if (token) headers.set('authorization', `Bearer ${token}`);
       return headers;
     },

@@ -8,6 +8,7 @@ export default function EmailVerification() {
 
   const [loading, setLoading] = useState(true);
   const [verified, setVerified] = useState(false);
+  const [redirecting, setRedirecting] = useState(false); 
 
   useEffect(() => {
     const token = searchParams.get('token');
@@ -20,7 +21,7 @@ export default function EmailVerification() {
 
     const verifyEmail = async () => {
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/verify-email?token=${token}`, {
+        const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/auth/verify-email?token=${token}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
@@ -28,9 +29,10 @@ export default function EmailVerification() {
         if (res.ok) {
           setVerified(true);
           toast.success('Email verified successfully!');
+          setRedirecting(true);  // রিডাইরেক্ট শুরু হলো
           setTimeout(() => {
-            navigate('/login');
-          }, 3000);
+            navigate('/dashboard');
+          }, 2000);
         } else {
           const data = await res.json();
           toast.error(data.message || 'Email verification failed.');
@@ -55,13 +57,21 @@ export default function EmailVerification() {
     );
   }
 
+  if (redirecting) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-lg text-green-600">Email verified! Redirecting to dashboard...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4">
       {verified ? (
         <>
           <h2 className="text-2xl font-semibold mb-4">Email Verified!</h2>
           <p className="mb-6 text-center text-gray-700">
-            Your email has been verified successfully. You will be redirected to the login page shortly.
+            Your email has been verified successfully. You will be redirected to the dashboard shortly.
           </p>
           <p>
             Or click{' '}

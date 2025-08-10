@@ -22,15 +22,15 @@ const persistConfig = {
   key: 'auth',
   version: 1,
   storage,
-  whitelist: ['token', 'user'], // auth slice এর token আর user persist হবে
+  whitelist: ['accessToken', 'refreshToken', 'user'], // persist accessToken, refreshToken, user
 };
 
-// exam persist config
+// persist config for exam slice
 const persistExamConfig = {
   key: 'exam',
   version: 1,
   storage,
-  whitelist: ['examId', 'step', 'timer', 'answers'], 
+  whitelist: ['examId', 'step', 'timer', 'answers'],
 };
 
 const persistedAuthReducer = persistReducer(persistConfig, authReducer);
@@ -39,7 +39,7 @@ const persistedExamReducer = persistReducer(persistExamConfig, examReducer);
 export const store = configureStore({
   reducer: {
     auth: persistedAuthReducer,
-    exam: persistedExamReducer,  
+    exam: persistedExamReducer,
     [authApi.reducerPath]: authApi.reducer,
     [examsApi.reducerPath]: examsApi.reducer,
   },

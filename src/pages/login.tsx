@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAppDispatch } from '../hooks';
 import { Link } from 'react-router-dom';
 import { useLoginMutation } from '../features/auth/authApi';
-import { setToken, setUser } from '../features/auth/authSlice';
+import { setRefreshToken, setToken, setUser } from '../features/auth/authSlice';
 import { toast } from 'sonner';
 
 export default function Login() {
@@ -20,6 +20,8 @@ export default function Login() {
 
       // Redux এ সেভ
       dispatch(setToken(response.accessToken));
+      dispatch(setRefreshToken(response.refreshToken));
+      dispatch(setUser(response.user));
       if (response.user) {
         dispatch(setUser(response.user));
       }

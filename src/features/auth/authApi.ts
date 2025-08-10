@@ -39,7 +39,7 @@ export const authApi = createApi({
     baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
     prepareHeaders: (headers, { getState }) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const token = (getState() as any).auth.token;
+      const token = (getState() as any).auth.accessToken;
       if (token) headers.set('Authorization', `Bearer ${token}`);
       return headers;
     },

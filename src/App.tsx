@@ -10,6 +10,7 @@ import { useSelector } from 'react-redux';
 import StudentDashboard from './dashboard/StudentDashboard';
 import AdminDashboard from './dashboard/AdminDashboard';
 import SupervisorDashboard from './dashboard/SupervisorDashboard';
+import EmailVerification from './pages/EmailVerification';
 
 export default function App() {
   const user = useSelector((state: RootState) => state.auth.user);
@@ -22,6 +23,7 @@ export default function App() {
           <Route index element={<Home />} />
           <Route path="login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
           <Route path="register" element={<Register />} />
+          <Route path="verify-email" element={<EmailVerification/>} />
         </Route>
 
         {/* Protected Routes */}
